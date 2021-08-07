@@ -35,7 +35,7 @@ describe("rEtherPool", function () {
       let dAmount = getPercentage(rBal, dPercentage); // x RewardToken
       let userPercentage = getPercentageOfTwoNumbers(stakingBal, totalBal);
       let userRewardAmount = getPercentage(dAmount, userPercentage).toFixed(6);
-      console.log("Updating " + userRewardAmount + " AES to addr " + address);
+      //console.log("Updating " + userRewardAmount + " AES to addr " + address);
       //console.log("dAmount: " + dAmount + " / userPercentage: " + userPercentage + " / userRewardAmount: " + userRewardAmount + " / dPercentage: " + dPercentage + " / rBal: " + rBal);
       // Send Reward
       await rEtherPoolContract.UpdateRewardBalance(address, ethers.utils.parseEther(userRewardAmount));
@@ -44,13 +44,13 @@ describe("rEtherPool", function () {
     }
   }
 
-  it("Should receive 10 MATIC from w1", async function () {
+  it("Should receive 10 MATIC from w1 and send to custodian", async function () {
     const stakeTX = await wallet1.sendTransaction({
       to: rEtherPoolContract.address,
       value: tenMatic
     });
     await stakeTX.wait();
-    expect(ethers.utils.formatUnits(await rEtherPoolContract.GetMATICBalance())).to.equal("10.0");
+    expect(Math.round(ethers.utils.formatUnits(await owner.getBalance()))).to.equal(10010);
   });
 
   it("Should receive 5 Staked MATIC from w2 and add w2 to stakers", async function () {
@@ -135,9 +135,10 @@ describe("rEtherPool", function () {
     await walletOnePoolContract.Stake({ value: hundredMatic });
     //console.log(ogBal);
     await walletOnePoolContract.Unstake();
+    await rEtherPoolContract.CollectFees();
     let newBal = Math.round(ethers.utils.formatUnits(await owner.getBalance()));
     //console.log(newBal)
-    expect(newBal).to.equal(10010);
+    expect(newBal).to.equal((ogBal + 5));
   });
 
   it("Should withdraw 1000 AES to custodian", async function () {
