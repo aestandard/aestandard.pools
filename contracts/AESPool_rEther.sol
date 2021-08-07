@@ -2,7 +2,7 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-/**
+/*
          _                   _           _
         / /\                /\ \        / /\
        / /  \              /  \ \      / /  \
@@ -27,7 +27,7 @@ AES Cryptoasset Staking Pool, Recieve Ether. (Version 1)
 Network: Polygon
 
 
-**/
+*/
 
 contract AESPool {
 
@@ -35,8 +35,8 @@ contract AESPool {
     string public name = "AES Staking Pool (receive Ether) V1";
 
     // Define the variables we'll be using on the contract
-    address public aesToken = "0x5ac3ceee2c3e6790cadd6707deb2e87ea83b0631";
-    address custodian;
+    address public aesToken = 0x5aC3ceEe2C3E6790cADD6707Deb2E87EA83b0631;
+    address public custodian;
 
     address[] public stakers;
     mapping(address => uint) public stakingBalance;
@@ -45,6 +45,8 @@ contract AESPool {
 
     uint public aesTokenHoldingAmount;
     uint public DistributionPercentage = 1; // 1 = 0.1%
+    uint public withdrawalFee = 500;
+    uint public custodianFees;
 
     constructor() public {
       custodian = msg.sender;
@@ -86,11 +88,6 @@ contract AESPool {
       return (stakingTotal / (10 ** 18));
     }
 
-    function SendFees(uint amount) internal {
-      (bool sent, bytes memory data) = custodian.call{value: amount}("");
-      require(sent, "Failed to send Matic");
-    }
-
     // Contract functions begin
 
     function Stake() public payable {
@@ -121,12 +118,15 @@ contract AESPool {
       RemoveFromStakers(userPosition);
       isStaking[user] = false;
       // Send the staker their MATIC (5% Withdrawal Fee)
-      uint fee = FindPercentage(bal, 500);
+      uint fee = FindPercentage(bal, withdrawalFee);
       uint matic = bal - fee;
       (bool sent, bytes memory data) = user.call{value: matic}("");
-      require(sent, "Failed to send Matic");
-      // Send the fee
-      SendFees(fee);
+      if(!sent){
+        stakingBalance[user] = bal;
+      }else{
+        // Send the fee
+        custodianFees = custodianFees + fee;
+      }
     }
 
     function CollectRewards() public {
@@ -138,7 +138,12 @@ contract AESPool {
       IERC20(aesToken).approve(address(this), 0);
       IERC20(aesToken).approve(address(this), rBal);
       bool sent = IERC20(aesToken).transferFrom(address(this), user, rBal);
-      require(sent, "The user rewards were not sent");
+      if(!sent){ rewardBalance[user] = rBal; }
+    }
+
+    function CollectFees() public CustodianOnly {
+      (bool sent, bytes memory data) = custodian.call{value: custodianFees}("");
+      if(sent){custodianFees = 0;}
     }
 
     // Should be called after initial AES is sent or when Tokens are recieved.
@@ -153,7 +158,7 @@ contract AESPool {
     // Don't send matic directly to the contract
     receive() external payable {
       (bool sent, bytes memory data) = custodian.call{value: msg.value}("");
-      require(sent, "Failed to send Matic");
+      if(!sent){ custodianFees = custodianFees + msg.value; }
     }
 
     function UpdateRewardBalance(address user, uint amount) public CustodianOnly {
@@ -172,6 +177,11 @@ contract AESPool {
     function ChangeDistributionPercentage(uint percent) public CustodianOnly {
       require(1000 >= percent, "Distribution Overflow");
       DistributionPercentage = percent;
+    }
+
+    function ChangeWithdrawalFee(uint percent) public CustodianOnly {
+      require(1000 >= percent, "Withdrawal Overflow");
+      withdrawalFee = percent;
     }
 
     // Only used in testing
