@@ -1,4 +1,4 @@
-![GitHub Logo](/bannermeta.png)
+![GitHub Logo](/bannermeta_b.png)
 [Website](https://aestandard.finance) | [Twitter](https://twitter.com/aestandardfi) | [Telegram](https://t.me/aestandard)
 
 # ÆStandard Finance Technologies
