@@ -91,7 +91,7 @@ contract AESPoolrEther is ReentrancyGuard {
 
     // Contract functions begin
 
-    function Stake() public payable {
+    function Stake() nonReentrant() public payable {
       require(msg.value > 0, "Matic needs to be staked");
       // Get the MATIC sender
       address user = msg.sender;
@@ -130,7 +130,7 @@ contract AESPoolrEther is ReentrancyGuard {
       }
     }
 
-    function CollectRewards() public {
+    function CollectRewards() nonReentrant() public {
       address user = msg.sender;
       uint rBal = rewardBalance[user];
       require(rBal > 0, "Your reward balance cannot be zero");
