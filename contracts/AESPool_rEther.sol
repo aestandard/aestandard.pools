@@ -1,6 +1,7 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 /*
          _                   _           _
@@ -29,7 +30,7 @@ Network: Polygon
 
 */
 
-contract AESPool {
+contract AESPoolrEther is ReentrancyGuard {
 
     // Name of contract
     string public name = "AES Staking Pool (receive Ether) V1";
@@ -48,7 +49,7 @@ contract AESPool {
     uint public withdrawalFee = 500;
     uint public custodianFees;
 
-    constructor() public {
+    constructor() ReentrancyGuard() public {
       custodian = msg.sender;
     }
 
@@ -104,7 +105,7 @@ contract AESPool {
       }
     }
 
-    function Unstake() public {
+    function Unstake() nonReentrant() public {
       // Get the MATIC sender
       address user = msg.sender;
       // get the users staking balance
@@ -120,7 +121,7 @@ contract AESPool {
       // Send the staker their MATIC (5% Withdrawal Fee)
       uint fee = FindPercentage(bal, withdrawalFee);
       uint matic = bal - fee;
-      (bool sent, bytes memory data) = user.call{value: matic}("");
+      (bool sent, ) = user.call{value: matic}("");
       if(!sent){
         stakingBalance[user] = bal;
       }else{
@@ -141,8 +142,8 @@ contract AESPool {
       if(!sent){ rewardBalance[user] = rBal; }
     }
 
-    function CollectFees() public CustodianOnly {
-      (bool sent, bytes memory data) = custodian.call{value: custodianFees}("");
+    function CollectFees() nonReentrant() public CustodianOnly {
+      (bool sent, ) = custodian.call{value: custodianFees}("");
       if(sent){custodianFees = 0;}
     }
 
@@ -156,8 +157,8 @@ contract AESPool {
     }
 
     // Don't send matic directly to the contract
-    receive() external payable {
-      (bool sent, bytes memory data) = custodian.call{value: msg.value}("");
+    receive() nonReentrant() external payable {
+      (bool sent, ) = custodian.call{value: msg.value}("");
       if(!sent){ custodianFees = custodianFees + msg.value; }
     }
 
