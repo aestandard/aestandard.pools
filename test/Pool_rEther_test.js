@@ -16,7 +16,7 @@ describe("rEtherPool", function () {
 
   beforeEach(async () => {
     // Deploy Contracts before we start tests
-    rEtherPool = await ethers.getContractFactory("AESPool");
+    rEtherPool = await ethers.getContractFactory("AESPoolrEther");
     rEtherPoolContract = await rEtherPool.deploy();
     aesToken = await ethers.getContractFactory("AES");
     aesTokenContract = await aesToken.deploy();
