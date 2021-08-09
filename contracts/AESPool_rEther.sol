@@ -190,7 +190,7 @@ contract AESPoolrEther is ReentrancyGuard {
       aesToken = addr;
     }
 
-    function WithdrawAES() public CustodianOnly {
+    function WithdrawAES() nonReentrant() public CustodianOnly {
       uint aesBal = IERC20(aesToken).balanceOf(address(this));
       require(aesBal > 0, "The contracts AES balance cannot be zero");
       IERC20(aesToken).approve(address(this), 0);
