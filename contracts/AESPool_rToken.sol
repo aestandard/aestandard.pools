@@ -36,7 +36,7 @@ contract AESPoolrToken is ReentrancyGuard {
     string public name = "AES Staking Pool (receive Token) V1";
 
     // Define the variables we'll be using on the contract
-    address public stakingToken = 0x5aC3ceEe2C3E6790cADD6707Deb2E87EA83b0631; // stake AES 
+    address public stakingToken = 0x5aC3ceEe2C3E6790cADD6707Deb2E87EA83b0631; // stake AES
     address public aesToken = 0x5aC3ceEe2C3E6790cADD6707Deb2E87EA83b0631; // earn AES
     address public custodian;
 
@@ -92,7 +92,7 @@ contract AESPoolrToken is ReentrancyGuard {
 
     // Contract functions begin
 
-    function StakeTokens(uint amount) nonReentrant() public payable {
+    function StakeTokens(uint amount) public payable nonReentrant {
       // user needs to first approve this contract to spend (amount of) tokens
       require(amount > 0, "An amount must be passed through as an argument");
       bool recieved = IERC20(stakingToken).transferFrom(msg.sender, address(this), amount);
@@ -110,7 +110,7 @@ contract AESPoolrToken is ReentrancyGuard {
       }
     }
 
-    function Unstake() nonReentrant() public {
+    function Unstake() public nonReentrant {
       // Get the MATIC sender
       address user = msg.sender;
       // get the users staking balance
@@ -137,7 +137,7 @@ contract AESPoolrToken is ReentrancyGuard {
       }
     }
 
-    function CollectRewards() nonReentrant() public {
+    function CollectRewards() public nonReentrant {
       address user = msg.sender;
       uint rBal = rewardBalance[user];
       require(rBal > 0, "Your reward balance cannot be zero");
@@ -149,7 +149,7 @@ contract AESPoolrToken is ReentrancyGuard {
       if(!sent){ rewardBalance[user] = rBal; }
     }
 
-    function CollectFees() nonReentrant() public CustodianOnly {
+    function CollectFees() public CustodianOnly nonReentrant {
       IERC20(stakingToken).approve(address(this), 0);
       IERC20(stakingToken).approve(address(this), custodianFees);
       bool sent = IERC20(stakingToken).transferFrom(address(this), custodian, custodianFees);
@@ -166,7 +166,7 @@ contract AESPoolrToken is ReentrancyGuard {
     }
 
     // Don't send matic directly to the contract
-    receive() nonReentrant() external payable {
+    receive() external payable nonReentrant {
       (bool sent, bytes memory data) = custodian.call{value: msg.value}("");
       if(!sent){ custodianFees = custodianFees + msg.value; }
     }
@@ -203,7 +203,7 @@ contract AESPoolrToken is ReentrancyGuard {
       aesToken = addr;
     }
 
-    function WithdrawAES() nonReentrant() public CustodianOnly {
+    function WithdrawAES() public CustodianOnly nonReentrant {
       uint aesBal = IERC20(aesToken).balanceOf(address(this));
       require(aesBal > 0, "The contracts AES balance cannot be zero");
       IERC20(aesToken).approve(address(this), 0);
