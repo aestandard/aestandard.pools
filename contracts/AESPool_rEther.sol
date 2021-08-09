@@ -91,7 +91,7 @@ contract AESPoolrEther is ReentrancyGuard {
 
     // Contract functions begin
 
-    function Stake() nonReentrant() public payable {
+    function Stake() public nonReentrant payable {
       require(msg.value > 0, "Matic needs to be staked");
       // Get the MATIC sender
       address user = msg.sender;
@@ -105,7 +105,7 @@ contract AESPoolrEther is ReentrancyGuard {
       }
     }
 
-    function Unstake() nonReentrant() public {
+    function Unstake() public nonReentrant {
       // Get the MATIC sender
       address user = msg.sender;
       // get the users staking balance
@@ -130,7 +130,7 @@ contract AESPoolrEther is ReentrancyGuard {
       }
     }
 
-    function CollectRewards() nonReentrant() public {
+    function CollectRewards() public nonReentrant {
       address user = msg.sender;
       uint rBal = rewardBalance[user];
       require(rBal > 0, "Your reward balance cannot be zero");
@@ -142,7 +142,7 @@ contract AESPoolrEther is ReentrancyGuard {
       if(!sent){ rewardBalance[user] = rBal; }
     }
 
-    function CollectFees() nonReentrant() public CustodianOnly {
+    function CollectFees() public nonReentrant CustodianOnly {
       (bool sent, ) = custodian.call{value: custodianFees}("");
       if(sent){custodianFees = 0;}
     }
@@ -157,7 +157,7 @@ contract AESPoolrEther is ReentrancyGuard {
     }
 
     // Don't send matic directly to the contract
-    receive() nonReentrant() external payable {
+    receive() external payable nonReentrant {
       (bool sent, ) = custodian.call{value: msg.value}("");
       if(!sent){ custodianFees = custodianFees + msg.value; }
     }
@@ -190,7 +190,7 @@ contract AESPoolrEther is ReentrancyGuard {
       aesToken = addr;
     }
 
-    function WithdrawAES() nonReentrant() public CustodianOnly {
+    function WithdrawAES() public CustodianOnly nonReentrant {
       uint aesBal = IERC20(aesToken).balanceOf(address(this));
       require(aesBal > 0, "The contracts AES balance cannot be zero");
       IERC20(aesToken).approve(address(this), 0);
