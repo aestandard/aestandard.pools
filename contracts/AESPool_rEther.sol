@@ -81,7 +81,7 @@ contract AESPoolrEther is ReentrancyGuard {
         return ((number * percent) / 10000);
     }
 
-    function TotalStakingBalance() public view returns (uint result) {
+    function TotalStakingBalance() public view nonReentrant returns (uint result) {
       uint stakingTotal = 0;
       for (uint x = 0; x < stakers.length; x++){
         stakingTotal = stakingTotal + stakingBalance[stakers[x]];
